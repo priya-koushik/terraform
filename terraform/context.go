@@ -667,9 +667,6 @@ func (c *Context) Validate() ([]string, []error) {
 	rerrs := multierror.Append(errs, walker.ValidationErrors...)
 
 	sort.Strings(walker.ValidationWarnings)
-	sort.Slice(rerrs.Errors, func(i, j int) bool {
-		return rerrs.Errors[i].Error() < rerrs.Errors[j].Error()
-	})
 
 	return walker.ValidationWarnings, rerrs.Errors
 }

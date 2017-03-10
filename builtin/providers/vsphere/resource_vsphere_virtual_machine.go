@@ -665,9 +665,9 @@ func resourceVSphereVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	log.Printf("\n[bks_start] Passed resourcedata data %s [bks_end]\n", d)
 
 	vm := virtualMachine{
-		name:       d.Get("name").(string),
-		vcpu:       int32(d.Get("vcpu").(int)),
-		memoryMb:   int64(d.Get("memory").(int)),
+		name:     d.Get("name").(string),
+		vcpu:     int32(d.Get("vcpu").(int)),
+		memoryMb: int64(d.Get("memory").(int)),
 		memoryAllocation: memoryAllocation{
 			reservation: int64(d.Get("memory_reservation").(int)),
 		},
