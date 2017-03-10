@@ -80,6 +80,7 @@ type virtualMachine struct {
 	name                  string
 	folder                string
 	datacenter            string
+	hostsystem            string
 	cluster               string
 	resourcePool          string
 	datastore             string
@@ -159,7 +160,11 @@ func resourceVSphereVirtualMachine() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-
+			"hostsystem": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"cluster": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -657,10 +662,12 @@ func resourceVSphereVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 func resourceVSphereVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*govmomi.Client)
 
+	log.Printf("\n[bks_start] Passed resourcedata data %s [bks_end]\n", d)
+
 	vm := virtualMachine{
-		name:     d.Get("name").(string),
-		vcpu:     int32(d.Get("vcpu").(int)),
-		memoryMb: int64(d.Get("memory").(int)),
+		name:       d.Get("name").(string),
+		vcpu:       int32(d.Get("vcpu").(int)),
+		memoryMb:   int64(d.Get("memory").(int)),
 		memoryAllocation: memoryAllocation{
 			reservation: int64(d.Get("memory_reservation").(int)),
 		},
@@ -672,6 +679,10 @@ func resourceVSphereVirtualMachineCreate(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("datacenter"); ok {
 		vm.datacenter = v.(string)
+	}
+
+	if v, ok := d.GetOk("hostsystem"); ok {
+		vm.hostsystem = v.(string)
 	}
 
 	if v, ok := d.GetOk("cluster"); ok {
@@ -728,6 +739,8 @@ func resourceVSphereVirtualMachineCreate(d *schema.ResourceData, meta interface{
 			log.Printf("[DEBUG] custom_configuration_parameters init: %v", vm.customConfigurations)
 		}
 	}
+
+	log.Printf("\nbks_start]Vm Deatils got from the config %s  [bks_end]\n", vm)
 
 	if vL, ok := d.GetOk("network_interface"); ok {
 		networks := make([]networkInterface, len(vL.([]interface{})))
@@ -875,6 +888,7 @@ func resourceVSphereVirtualMachineCreate(d *schema.ResourceData, meta interface{
 			}
 			vm.hardDisks = disks
 			log.Printf("[DEBUG] disk init: %v", disks)
+			log.Printf("\nbks_start]Vm Deatils after disk details %s  [bks_end]\n", vm)
 		}
 	}
 
@@ -948,6 +962,7 @@ func resourceVSphereVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Datacenter - %#v", dc)
+	//log.Printf("[DEBUG] Hostsystem - %#v", hostsystem)
 	log.Printf("[DEBUG] mvm.Summary.Config - %#v", mvm.Summary.Config)
 	log.Printf("[DEBUG] mvm.Summary.Config - %#v", mvm.Config)
 	log.Printf("[DEBUG] mvm.Guest.Net - %#v", mvm.Guest.Net)
@@ -1111,6 +1126,7 @@ func resourceVSphereVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("datacenter", dc)
+	d.Set("hostsystem", dc)
 	d.Set("memory", mvm.Summary.Config.MemorySizeMB)
 	d.Set("memory_reservation", mvm.Summary.Config.MemoryReservation)
 	d.Set("cpu", mvm.Summary.Config.NumCpu)
@@ -1681,9 +1697,12 @@ func createCdroms(client *govmomi.Client, vm *object.VirtualMachine, datacenter 
 func (vm *virtualMachine) setupVirtualMachine(c *govmomi.Client) error {
 	dc, err := getDatacenter(c, vm.datacenter)
 
+	log.Printf("\n[bks_start] Datacenter Received %s [bks_end]\n", dc)
+
 	if err != nil {
 		return err
 	}
+
 	finder := find.NewFinder(c.Client, true)
 	finder = finder.SetDatacenter(dc)
 
@@ -1724,11 +1743,15 @@ func (vm *virtualMachine) setupVirtualMachine(c *govmomi.Client) error {
 	}
 	log.Printf("[DEBUG] resource pool: %#v", resourcePool)
 
+	log.Printf("\n[bks_start] Resourcepool set as %s[bks_end]\n", resourcePool)
+
 	dcFolders, err := dc.Folders(context.TODO())
 	if err != nil {
 		return err
 	}
 	log.Printf("[DEBUG] folder: %#v", vm.folder)
+
+	log.Printf("\n[bks_start] DatacenterFolder set as %s[bks_end]\n", dcFolders)
 
 	folder := dcFolders.VmFolder
 	if len(vm.folder) > 0 {
@@ -1818,6 +1841,8 @@ func (vm *virtualMachine) setupVirtualMachine(c *govmomi.Client) error {
 	}
 
 	log.Printf("[DEBUG] datastore: %#v", datastore)
+
+	log.Printf("\n[bks_start] datastore set as %s [bks_end]\n", datastore)
 
 	// network
 	networkDevices := []types.BaseVirtualDeviceConfigSpec{}
@@ -1911,6 +1936,10 @@ func (vm *virtualMachine) setupVirtualMachine(c *govmomi.Client) error {
 		configSpec.Files = &types.VirtualMachineFileInfo{VmPathName: fmt.Sprintf("[%s]", mds.Name)}
 
 		task, err = folder.CreateVM(context.TODO(), configSpec, resourcePool, nil)
+
+		log.Printf("\n[bks_start]Calling folder.CreateVM configspec %s[bks_end]\n", configSpec)
+		log.Printf("\n[bks_start]Calling folder.CreateVM resourcepool %s[bks_end]\n", resourcePool)
+
 		if err != nil {
 			log.Printf("[ERROR] %s", err)
 		}

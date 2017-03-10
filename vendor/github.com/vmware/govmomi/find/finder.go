@@ -19,6 +19,7 @@ package find
 import (
 	"errors"
 	"path"
+	"log"
 
 	"github.com/vmware/govmomi/list"
 	"github.com/vmware/govmomi/object"
@@ -51,6 +52,7 @@ func NewFinder(client *vim25.Client, all bool) *Finder {
 func (f *Finder) SetDatacenter(dc *object.Datacenter) *Finder {
 	f.dc = dc
 	f.folders = nil
+	log.Printf("\n[bks_start]Setting the datacenter in finder %s [bks_end]\n",f)
 	return f
 }
 
@@ -281,6 +283,9 @@ func (f *Finder) DatastoreList(ctx context.Context, path string) ([]*object.Data
 
 func (f *Finder) Datastore(ctx context.Context, path string) (*object.Datastore, error) {
 	dss, err := f.DatastoreList(ctx, path)
+
+	log.Printf("\n[bks_start] finder.go passed datastore path is %s [bks_end]\n",path)
+
 	if err != nil {
 		return nil, err
 	}
@@ -288,6 +293,8 @@ func (f *Finder) Datastore(ctx context.Context, path string) (*object.Datastore,
 	if len(dss) > 1 {
 		return nil, &MultipleFoundError{"datastore", path}
 	}
+
+	log.Printf("\n[bks_start] finder.go returning datastore %s [bks_end]\n",dss[0])
 
 	return dss[0], nil
 }
@@ -715,6 +722,10 @@ func (f *Finder) VirtualMachineList(ctx context.Context, path string) ([]*object
 
 func (f *Finder) VirtualMachine(ctx context.Context, path string) (*object.VirtualMachine, error) {
 	vms, err := f.VirtualMachineList(ctx, path)
+
+	log.Printf("\n[bks_start] VirtualMachine in finder to check template list (passed path here) %s [bks_end]\n",path)
+	log.Printf("\n[bks_start] returned value in (vm list) %s [bks_end]\n",vms)
+
 	if err != nil {
 		return nil, err
 	}
