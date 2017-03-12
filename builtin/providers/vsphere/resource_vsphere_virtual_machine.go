@@ -1706,6 +1706,14 @@ func (vm *virtualMachine) setupVirtualMachine(c *govmomi.Client) error {
 	finder := find.NewFinder(c.Client, true)
 	finder = finder.SetDatacenter(dc)
 
+	hsnew, err := finder.HostSystem(context.TODO(), vm.hostsystem)
+	log.Printf("\n[bks_start] received new hostsystem is %s \n", hsnew)
+
+	//bks: call getHost here
+	hs, err := getHost(c, dc, vm.hostsystem)
+
+	log.Printf("\n[bks_start] received hostsystem is %s \n", hs)
+
 	var template *object.VirtualMachine
 	var template_mo mo.VirtualMachine
 	var vm_mo mo.VirtualMachine
@@ -1935,7 +1943,7 @@ func (vm *virtualMachine) setupVirtualMachine(c *govmomi.Client) error {
 
 		configSpec.Files = &types.VirtualMachineFileInfo{VmPathName: fmt.Sprintf("[%s]", mds.Name)}
 
-		task, err = folder.CreateVM(context.TODO(), configSpec, resourcePool, nil)
+		task, err = folder.CreateVM(context.TODO(), configSpec, resourcePool, hs)
 
 		log.Printf("\n[bks_start]Calling folder.CreateVM configspec %s[bks_end]\n", configSpec)
 		log.Printf("\n[bks_start]Calling folder.CreateVM resourcepool %s[bks_end]\n", resourcePool)

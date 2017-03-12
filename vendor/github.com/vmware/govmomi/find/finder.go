@@ -35,6 +35,7 @@ type Finder struct {
 
 	dc      *object.Datacenter
 	folders *object.DatacenterFolders
+        hostsystem *object.HostSystem
 }
 
 func NewFinder(client *vim25.Client, all bool) *Finder {
@@ -59,6 +60,7 @@ func (f *Finder) SetDatacenter(dc *object.Datacenter) *Finder {
 type findRelativeFunc func(ctx context.Context) (object.Reference, error)
 
 func (f *Finder) find(ctx context.Context, fn findRelativeFunc, tl bool, arg string) ([]list.Element, error) {
+	log.Printf("\n[bks_start]finder.go inside find function, passed string is %s [bks_end]\n",arg)
 	root := list.Element{
 		Path:   "/",
 		Object: object.NewRootFolder(f.client),
@@ -66,6 +68,7 @@ func (f *Finder) find(ctx context.Context, fn findRelativeFunc, tl bool, arg str
 
 	parts := list.ToParts(arg)
 
+	log.Printf("\n[bks_start]finder.go inside find function, value of parts is %s [bks_end]\n",parts)
 	if len(parts) > 0 {
 		switch parts[0] {
 		case "..": // Not supported; many edge case, little value
@@ -100,6 +103,7 @@ func (f *Finder) find(ctx context.Context, fn findRelativeFunc, tl bool, arg str
 		return nil, err
 	}
 
+	log.Printf("\n[bks_start]finder.go returning find function, passed string is %s [bks_end]\n",es)
 	return es, nil
 }
 
@@ -481,7 +485,9 @@ func (f *Finder) ClusterComputeResource(ctx context.Context, path string) (*obje
 }
 
 func (f *Finder) HostSystemList(ctx context.Context, path string) ([]*object.HostSystem, error) {
+	log.Printf("\n[bks_start] finder.go, called hostsystemlist %s [bks_end]\n",path)
 	es, err := f.find(ctx, f.hostFolder, false, path)
+	log.Printf("\n[bks_start] finder.go, inside hostsystemlist, value ess from f.find(ctx, f.hostFolder, false, path) %s [bks_end]\n",es)
 	if err != nil {
 		return nil, err
 	}
@@ -513,11 +519,13 @@ func (f *Finder) HostSystemList(ctx context.Context, path string) ([]*object.Hos
 	if len(hss) == 0 {
 		return nil, &NotFoundError{"host", path}
 	}
+	log.Printf("\n[bks_start] finder.go, returning from hostsystemlist with hss %s [bks_end]\n",hss)
 
 	return hss, nil
 }
 
 func (f *Finder) HostSystem(ctx context.Context, path string) (*object.HostSystem, error) {
+	log.Printf("\n[bks_start] finder.go, called hostsystem %s [bks_end]\n",path)
 	hss, err := f.HostSystemList(ctx, path)
 	if err != nil {
 		return nil, err
@@ -526,16 +534,17 @@ func (f *Finder) HostSystem(ctx context.Context, path string) (*object.HostSyste
 	if len(hss) > 1 {
 		return nil, &MultipleFoundError{"host", path}
 	}
-
+	log.Printf("\n[bks_start] finder.go, returned hostsystem %s [bks_end]\n",hss[0])
 	return hss[0], nil
 }
 
 func (f *Finder) DefaultHostSystem(ctx context.Context) (*object.HostSystem, error) {
+	log.Printf("\n[bks_start] finder.go, calling Defaulthostsystem %s [bks_end]\n")
 	hs, err := f.HostSystem(ctx, "*/*")
 	if err != nil {
 		return nil, toDefaultError(err)
 	}
-
+	log.Printf("\n[bks_start] finder.go, returning Defaulthostsystem %s [bks_end]\n",hs)
 	return hs, nil
 }
 
