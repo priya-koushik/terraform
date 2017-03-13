@@ -503,6 +503,12 @@ func resourceVSphereVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		rebootRequired = true
 	}
 
+	if d.HasChange("hostsystem") {
+		configSpec.MemoryMB = int64(d.Get("hostsystem").(int))
+		hasChanges = true
+		rebootRequired = true
+	}
+
 	client := meta.(*govmomi.Client)
 	dc, err := getDatacenter(client, d.Get("datacenter").(string))
 	if err != nil {
