@@ -935,6 +935,11 @@ func resourceVSphereVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	finder := find.NewFinder(client.Client, true)
 	finder = finder.SetDatacenter(dc)
 
+        hostsystem, err := getHost(client, d.Get("hostsystem").(string))
+	if err != nil {
+		log.Printf("[DEBUG] Unknown host: %#v", d.Get("hostsystem").(string))
+	}
+
 	vm, err := finder.VirtualMachine(context.TODO(), d.Id())
 	if err != nil {
 		d.SetId("")
@@ -965,7 +970,7 @@ func resourceVSphereVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Datacenter - %#v", dc)
-	//log.Printf("[DEBUG] Hostsystem - %#v", hostsystem)
+	log.Printf("[DEBUG] Hostsystem - %#v", hostsystem)
 	log.Printf("[DEBUG] mvm.Summary.Config - %#v", mvm.Summary.Config)
 	log.Printf("[DEBUG] mvm.Summary.Config - %#v", mvm.Config)
 	log.Printf("[DEBUG] mvm.Guest.Net - %#v", mvm.Guest.Net)
@@ -1129,7 +1134,7 @@ func resourceVSphereVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("datacenter", dc)
-	//d.Set("hostsystem", hostsystem)
+	d.Set("hostsystem", hostsystem)
 	d.Set("memory", mvm.Summary.Config.MemorySizeMB)
 	d.Set("memory_reservation", mvm.Summary.Config.MemoryReservation)
 	d.Set("cpu", mvm.Summary.Config.NumCpu)
@@ -1706,7 +1711,7 @@ func (vm *virtualMachine) setupVirtualMachine(c *govmomi.Client) error {
 	finder := find.NewFinder(c.Client, true)
 	finder = finder.SetDatacenter(dc)
 
-	hs, err := getHost(c, dc, vm.hostsystem)
+	hs, err := getHost(c, vm.hostsystem)
 	if err != nil {
 		log.Printf("[DEBUG] Unknown host: %#v", vm.hostsystem)
 	}
