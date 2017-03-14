@@ -80,6 +80,7 @@ type virtualMachine struct {
 	name                  string
 	folder                string
 	datacenter            string
+	hostsystem            string
 	cluster               string
 	resourcePool          string
 	datastore             string
@@ -155,6 +156,12 @@ func resourceVSphereVirtualMachine() *schema.Resource {
 			},
 
 			"datacenter": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
+			"hostsystem": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -498,6 +505,12 @@ func resourceVSphereVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		rebootRequired = true
 	}
 
+	if d.HasChange("hostsystem") {
+		configSpec.MemoryMB = int64(d.Get("hostsystem").(int))
+		hasChanges = true
+		rebootRequired = true
+	}
+
 	client := meta.(*govmomi.Client)
 	dc, err := getDatacenter(client, d.Get("datacenter").(string))
 	if err != nil {
@@ -672,6 +685,10 @@ func resourceVSphereVirtualMachineCreate(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("datacenter"); ok {
 		vm.datacenter = v.(string)
+	}
+
+	if v, ok := d.GetOk("hostsystem"); ok {
+		vm.hostsystem = v.(string)
 	}
 
 	if v, ok := d.GetOk("cluster"); ok {
@@ -918,6 +935,11 @@ func resourceVSphereVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	finder := find.NewFinder(client.Client, true)
 	finder = finder.SetDatacenter(dc)
 
+       hostsystem, err := getHost(client, d.Get("hostsystem").(string))
+	if err != nil {
+		log.Printf("[DEBUG] Unknown host: %#v", d.Get("hostsystem").(string))
+	}
+
 	vm, err := finder.VirtualMachine(context.TODO(), d.Id())
 	if err != nil {
 		d.SetId("")
@@ -948,6 +970,7 @@ func resourceVSphereVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Datacenter - %#v", dc)
+	log.Printf("[DEBUG] Hostsystem - %#v", hostsystem)
 	log.Printf("[DEBUG] mvm.Summary.Config - %#v", mvm.Summary.Config)
 	log.Printf("[DEBUG] mvm.Summary.Config - %#v", mvm.Config)
 	log.Printf("[DEBUG] mvm.Guest.Net - %#v", mvm.Guest.Net)
@@ -1111,6 +1134,7 @@ func resourceVSphereVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("datacenter", dc)
+	d.Set("hostsystem", hostsystem)
 	d.Set("memory", mvm.Summary.Config.MemorySizeMB)
 	d.Set("memory_reservation", mvm.Summary.Config.MemoryReservation)
 	d.Set("cpu", mvm.Summary.Config.NumCpu)
@@ -1687,6 +1711,11 @@ func (vm *virtualMachine) setupVirtualMachine(c *govmomi.Client) error {
 	finder := find.NewFinder(c.Client, true)
 	finder = finder.SetDatacenter(dc)
 
+	hs, err := getHost(c, vm.hostsystem)
+	if err != nil {
+		log.Printf("[DEBUG] Unknown host: %#v", vm.hostsystem)
+	}
+
 	var template *object.VirtualMachine
 	var template_mo mo.VirtualMachine
 	var vm_mo mo.VirtualMachine
@@ -1910,7 +1939,8 @@ func (vm *virtualMachine) setupVirtualMachine(c *govmomi.Client) error {
 
 		configSpec.Files = &types.VirtualMachineFileInfo{VmPathName: fmt.Sprintf("[%s]", mds.Name)}
 
-		task, err = folder.CreateVM(context.TODO(), configSpec, resourcePool, nil)
+		task, err = folder.CreateVM(context.TODO(), configSpec, resourcePool, hs)
+
 		if err != nil {
 			log.Printf("[ERROR] %s", err)
 		}

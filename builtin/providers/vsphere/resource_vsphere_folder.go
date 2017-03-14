@@ -235,3 +235,15 @@ func getDatacenter(c *govmomi.Client, dc string) (*object.Datacenter, error) {
 		return d, err
 	}
 }
+
+// getHost gets host object
+func getHost(c *govmomi.Client, host string) (*object.HostSystem, error) {
+	finder := find.NewFinder(c.Client, true)
+	if host != "" {
+		h, err := finder.HostSystem(context.TODO(), host)
+		return h, err
+	} else {
+		h, err := finder.DefaultHostSystem(context.TODO())
+		return h, err
+	}
+}
