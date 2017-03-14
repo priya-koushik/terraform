@@ -519,6 +519,7 @@ func (f *Finder) HostSystem(ctx context.Context, path string) (*object.HostSyste
 	if len(hss) > 1 {
 		return nil, &MultipleFoundError{"host", path}
 	}
+
 	return hss[0], nil
 }
 
@@ -527,6 +528,7 @@ func (f *Finder) DefaultHostSystem(ctx context.Context) (*object.HostSystem, err
 	if err != nil {
 		return nil, toDefaultError(err)
 	}
+
 	return hs, nil
 }
 
