@@ -1712,8 +1712,8 @@ func (vm *virtualMachine) setupVirtualMachine(c *govmomi.Client) error {
 	finder := find.NewFinder(c.Client, true)
 	finder = finder.SetDatacenter(dc)
 
-	hsnew, err := finder.HostSystem(context.TODO(), vm.hostsystem)
-	log.Printf("\n[bks_start] received new hostsystem is %s \n", hsnew)
+	//hsnew, err := finder.HostSystem(context.TODO(), vm.hostsystem)
+	//log.Printf("\n[bks_start] received new hostsystem is %s \n", hsnew)
 
 	//bks: call getHost here
 	hs, err := getHost(c, dc, vm.hostsystem)

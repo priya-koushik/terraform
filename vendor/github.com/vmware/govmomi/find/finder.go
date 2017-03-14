@@ -35,7 +35,6 @@ type Finder struct {
 
 	dc      *object.Datacenter
 	folders *object.DatacenterFolders
-        hostsystem *object.HostSystem
 }
 
 func NewFinder(client *vim25.Client, all bool) *Finder {
