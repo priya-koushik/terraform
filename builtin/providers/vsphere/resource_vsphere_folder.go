@@ -236,26 +236,14 @@ func getDatacenter(c *govmomi.Client, dc string) (*object.Datacenter, error) {
 	}
 }
 
-// bks: getHost gets host object
+// getHost gets host object
 func getHost(c *govmomi.Client, dc *object.Datacenter, host string) (*object.HostSystem, error) {
 	finder := find.NewFinder(c.Client, true)
-
-	log.Printf("\n[bks_start] resource_vsphere_folder, finder before setting datacenters %s \n", finder)
-	//finder = finder.SetDatacenter(dc)
-
-	log.Printf("\n[bks_start] resource_vsphere_folder, finder after setting datacenters %s \n", finder)
-
-	log.Printf("\n[bks_start] resource_vsphere_folder, passed hostsystem is %s \n", host)
 	if host != "" {
 		h, err := finder.HostSystem(context.TODO(), host)
-		log.Printf("\n[bks_start] resource_vsphere_folder, received hostsystem is %s \n", h)
-
-		//dh, err := finder.DefaultHostSystem(context.TODO())
-		//log.Printf("\n[bks_start] resource_vsphere_folder, received default hostsystem is %s \n", dh)
 		return h, err
 	} else {
 		h, err := finder.DefaultHostSystem(context.TODO())
-		log.Printf("\n[bks_start] resource_vsphere_folder, received default hostsystem is %s \n", h)
 		return h, err
 	}
 }
