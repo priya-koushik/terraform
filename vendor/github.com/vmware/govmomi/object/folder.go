@@ -17,8 +17,6 @@ limitations under the License.
 package object
 
 import (
-	"log"
-
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/methods"
 	"github.com/vmware/govmomi/vim25/mo"
@@ -139,9 +137,6 @@ func (f Folder) AddStandaloneHost(ctx context.Context, spec types.HostConnectSpe
 }
 
 func (f Folder) CreateVM(ctx context.Context, config types.VirtualMachineConfigSpec, pool *ResourcePool, host *HostSystem) (*Task, error) {
-
-	log.Printf("\n[bks_start] govmomi/folder.go CreateVM is called [bks_end]\n")
-
 	req := types.CreateVM_Task{
 		This:   f.Reference(),
 		Config: config,

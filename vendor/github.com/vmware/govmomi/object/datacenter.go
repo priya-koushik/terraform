@@ -18,7 +18,6 @@ package object
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/methods"
@@ -73,8 +72,6 @@ func (d *Datacenter) Folders(ctx context.Context) (*DatacenterFolders, error) {
 	for _, p := range paths {
 		*p.path = fmt.Sprintf("/%s/%s", md.Name, p.name)
 	}
-
-	log.Printf("\n[bks_start] govmomi/datacenter.go file, the folders are set as %s[bks_end]\n",df)
 
 	return df, nil
 }
